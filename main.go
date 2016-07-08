@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -9,32 +11,41 @@ import (
 	parser "github.com/openvenues/gopostal/parser"
 )
 
+type Request struct {
+	Query string `json:"query"`
+}
+
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/expand", ExpandHandler)
-	r.HandleFunc("/parser", ParserHandler)
-	r.HandleFunc("/", HomeHandler)
-	fmt.Println("listening on port 080")
+	r.HandleFunc("/expand", ExpandHandler).Methods("POST")
+	r.HandleFunc("/parser", ParserHandler).Methods("POST")
+	fmt.Println("listening on port 8080")
 	http.ListenAndServe(":8080", r)
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Gorilla!\n"))
-}
-
 func ExpandHandler(w http.ResponseWriter, r *http.Request) {
-	expansions := expand.ExpandAddress("Quatre-vingt-douze Ave des Ave des Champs-Élysées")
+	w.Header().Set("Content-Type", "application/json")
 
-	for i := 0; i < len(expansions); i++ {
-		//fmt.Println(expansions[i])
-		w.Write([]byte(expansions[i]))
-		w.Write([]byte("\n"))
-	}
+	var req Request
+
+	q, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(q, &req)
+
+	expansions := expand.ExpandAddress(req.Query)
+
+	expansionThing, _ := json.Marshal(expansions)
+	w.Write(expansionThing)
 }
 
 func ParserHandler(w http.ResponseWriter, r *http.Request) {
-	parsed := parser.ParseAddress("781 Franklin Ave Crown Heights Brooklyn NY 11216 USA")
-	fmt.Println(parsed)
-	//w.Write([]byte(parsed))
-	w.Write([]byte("\n"))
+	w.Header().Set("Content-Type", "application/json")
+
+	var req Request
+
+	q, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(q, &req)
+
+	parsed := parser.ParseAddress(req.Query)
+	parseThing, _ := json.Marshal(parsed)
+	w.Write(parseThing)
 }
