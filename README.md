@@ -2,9 +2,10 @@
 
 ## API Example
 
+Replace <host> with your host
 
 ### Parser
-`curl -X POST -d '{"query": "100 main st buffalo ny"}' 192.168.99.100:8080/parser`
+`curl -X POST -d '{"query": "100 main st buffalo ny"}' <host>:8080/parser`
 
 ** Response **
 ```
@@ -29,7 +30,7 @@
 ```
 
 ### Expand
-`curl -X POST -d '{"query": "100 main st buffalo ny"}' 192.168.99.100:8080/expand`
+`curl -X POST -d '{"query": "100 main st buffalo ny"}' <host>:8080/expand`
 
 ** Response **
 ```
