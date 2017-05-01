@@ -21,17 +21,19 @@ func main() {
 	r.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	r.HandleFunc("/parser", ParserHandler).Methods("POST")
 
-	certFile := flag.String("certfile", "", "SSL Cert file")
-	keyFile := flag.String("keyfile", "", "SSL Key file")
-	host := flag.String("listen-host", "0.0.0.0", "Listen host")
-	port := flag.Int("listen-port", 8080, "Listen port")
+	var host, certFile, keyFile string
+	var port int
+	flag.StringVar(&host, "listen-host", "0.0.0.0", "Listen host")
+	flag.IntVar(&port, "listen-port", 8080, "Listen port")
+	flag.StringVar(&certFile, "certfile", "", "SSL Cert file")
+	flag.StringVar(&keyFile, "keyfile", "", "SSL Key file")
 	listenSpec := fmt.Sprintf("%s:%d", host, port)
 
 	fmt.Printf("listening on port %d", port)
 	if certFile != "" && keyFile != "" {
 		http.ListenAndServe(listenSpec, r)
 	} else {
-		http.ListenAndServeTLS(certFile, keyFile, r)
+		http.ListenAndServeTLS(listenSpec, certFile, keyFile, r)
 	}
 }
 
