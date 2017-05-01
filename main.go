@@ -25,15 +25,15 @@ func main() {
 	var port int
 	flag.StringVar(&host, "listen-host", "0.0.0.0", "Listen host")
 	flag.IntVar(&port, "listen-port", 8080, "Listen port")
-	flag.StringVar(&certFile, "certfile", "", "SSL Cert file")
-	flag.StringVar(&keyFile, "keyfile", "", "SSL Key file")
+	flag.StringVar(&certFile, "cert-file", "", "SSL Cert file")
+	flag.StringVar(&keyFile, "key-file", "", "SSL Key file")
 	listenSpec := fmt.Sprintf("%s:%d", host, port)
 
 	fmt.Printf("listening on port %d", port)
 	if certFile != "" && keyFile != "" {
-		http.ListenAndServe(listenSpec, r)
-	} else {
 		http.ListenAndServeTLS(listenSpec, certFile, keyFile, r)
+	} else {
+		http.ListenAndServe(listenSpec, r)
 	}
 }
 
