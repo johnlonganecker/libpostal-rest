@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	expand "github.com/openvenues/gopostal/expand"
@@ -21,18 +21,23 @@ func main() {
 	r.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	r.HandleFunc("/parser", ParserHandler).Methods("POST")
 
-	var host, certFile, keyFile string
-	var port int
-	flag.StringVar(&host, "listen-host", "0.0.0.0", "Listen host")
-	flag.IntVar(&port, "listen-port", 8080, "Listen port")
-	flag.StringVar(&certFile, "cert-file", "", "SSL Cert file")
-	flag.StringVar(&keyFile, "key-file", "", "SSL Key file")
-	listenSpec := fmt.Sprintf("%s:%d", host, port)
+	host := os.GetEnv("LISTEN_HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
+	port := os.GetEnv("LISTEN_PORT")
+	if port == "" {
+		port = "5000"
+	}
+	certFile := os.GetEnv("SSL_CERT_FILE")
+	keyFile := os.GetEnv("SSL_KEY_FILE")
+	listenSpec := fmt.Sprintf("%s:%s", host, port)
 
-	fmt.Printf("listening on port %d", port)
 	if certFile != "" && keyFile != "" {
+		fmt.Printf("listening on https://%s\n", listenSpec)
 		http.ListenAndServeTLS(listenSpec, certFile, keyFile, r)
 	} else {
+		fmt.Printf("listening on http://%s\n", listenSpec)
 		http.ListenAndServe(listenSpec, r)
 	}
 }
