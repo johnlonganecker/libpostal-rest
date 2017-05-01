@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -19,8 +20,19 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	r.HandleFunc("/parser", ParserHandler).Methods("POST")
-	fmt.Println("listening on port 8080")
-	http.ListenAndServe(":8080", r)
+
+	certFile := flag.String("certfile", "", "SSL Cert file")
+	keyFile := flag.String("keyfile", "", "SSL Key file")
+	host := flag.String("listen-host", "0.0.0.0", "Listen host")
+	port := flag.Int("listen-port", 8080, "Listen port")
+	listenSpec := fmt.Sprintf("%s:%d", host, port)
+
+	fmt.Printf("listening on port %d", port)
+	if certFile != "" && keyFile != "" {
+		http.ListenAndServe(listenSpec, r)
+	} else {
+		http.ListenAndServeTLS(certFile, keyFile, r)
+	}
 }
 
 func ExpandHandler(w http.ResponseWriter, r *http.Request) {
