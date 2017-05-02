@@ -34,6 +34,7 @@ func main() {
 	keyFile := os.Getenv("SSL_KEY_FILE")
 
 	router := mux.NewRouter()
+	router.HandleFunc("/health", HealthHandler).Methods("GET")
 	router.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	router.HandleFunc("/parser", ParserHandler).Methods("POST")
 
@@ -56,6 +57,11 @@ func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	s.Shutdown(ctx)
 	fmt.Println("Server stopped")
+}
+
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 func ExpandHandler(w http.ResponseWriter, r *http.Request) {
