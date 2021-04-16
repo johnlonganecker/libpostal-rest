@@ -4,6 +4,15 @@
 
 Replace <host> with your host
 
+### Build
+
+Go 1.13+. Build steps for older go versions may vary.
+
+```
+go build .
+ls ./libpostal-rest
+```
+
 ### Parser
 `curl -X POST -d '{"query": "100 main st buffalo ny"}' <host>:8080/parser`
 
