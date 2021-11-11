@@ -51,18 +51,18 @@ ls ./libpostal-rest
 ]
 ```
 ### Multi-Parser
-`curl -X POST -d '{"address": "30 Tai Seng St, #08-03C BreadTalk IHQ, Singapore 534013"}' <host>:8080/multi-parser`
+`curl -X POST -d '{"address": "# 1200, 3412, 150 S Independence Mall W, Philadelphia, PA 19106"}' <host>:8080/multi-parser`
 
 ** Response **
 ```
 {
     "Outputs": [
         {
-            "Address": "30 Tai Seng St, #08-03C BreadTalk IHQ, Singapore 534013",
-            "Street": "30 tai seng st # breadtalk ihq",
-            "City": "08-03csingapore",
-            "State": "",
-            "Postcode": "534013",
+            "Address": "# 1200, 3412, 150 S Independence Mall W, Philadelphia, PA 19106",
+            "Street": "# 1200 3412 150 s independence mall w",
+            "City": "philadelphia",
+            "State": "pa",
+            "Postcode": "19106",
             "Country": ""
         }
     ]
