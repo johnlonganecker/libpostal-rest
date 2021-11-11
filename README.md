@@ -50,3 +50,22 @@ ls ./libpostal-rest
   "100 main street buffalo ny"
 ]
 ```
+### Multi-Parser
+`curl -X POST -d '{"address": "30 Tai Seng St, #08-03C BreadTalk IHQ, Singapore 534013"}' <host>:8080/multi-parser`
+
+** Response **
+```
+{
+    "Outputs": [
+        {
+            "Address": "30 Tai Seng St, #08-03C BreadTalk IHQ, Singapore 534013",
+            "Street": "30 tai seng st # breadtalk ihq",
+            "City": "08-03csingapore",
+            "State": "",
+            "Postcode": "534013",
+            "Country": ""
+        }
+    ]
+}
+```
+  
