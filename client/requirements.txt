@@ -1,0 +1,5 @@
+pandas==1.1.5
+requests==2.26.0
+pydantic==1.8.2
+openpyxl==3.0.9
+xlrd==2.0.1

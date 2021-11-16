@@ -50,3 +50,22 @@ ls ./libpostal-rest
   "100 main street buffalo ny"
 ]
 ```
+### Multi-Parser
+`curl -X POST -d '{"address": "# 1200, 3412, 150 S Independence Mall W, Philadelphia, PA 19106"}' <host>:8080/multi-parser`
+
+** Response **
+```
+{
+    "Outputs": [
+        {
+            "Address": "# 1200, 3412, 150 S Independence Mall W, Philadelphia, PA 19106",
+            "Street": "# 1200 3412 150 s independence mall w",
+            "City": "philadelphia",
+            "State": "pa",
+            "Postcode": "19106",
+            "Country": ""
+        }
+    ]
+}
+```
+  
