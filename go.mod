@@ -1,6 +1,6 @@
-module github.com/johnlonganecker/libpostal-rest
+module github.com/eazyfin/libpostal-rest
 
-go 1.16
+go 1.17.8
 
 require (
 	github.com/gorilla/mux v1.8.0

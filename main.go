@@ -26,7 +26,7 @@ func main() {
 	}
 	port := os.Getenv("LISTEN_PORT")
 	if port == "" {
-		port = "8080"
+		port = "3000"
 	}
 	listenSpec := fmt.Sprintf("%s:%s", host, port)
 
@@ -34,7 +34,8 @@ func main() {
 	keyFile := os.Getenv("SSL_KEY_FILE")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/health", HealthHandler).Methods("GET")
+	router.HandleFunc("/healthcheck", HealthHandler).Methods("GET")
+	router.HandleFunc("/ping", HealthHandler).Methods("GET")
 	router.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	router.HandleFunc("/parser", ParserHandler).Methods("POST")
 
