@@ -54,10 +54,10 @@ ls ./libpostal-rest
 ### Expand and Parse
 `curl -X POST -d '{"query": "100 main st buffalo ny"}' <host>:8080/expandparser`
 
-Original query is parsed and added with `"type": "query"`.  
-All query expansions are parsed and added with `"tpye": "expansion"`
+Original query is parsed and added with `"type": "query"`.
+All query expansions are parsed and added with `"type": "expansion"`
 
-** Response **  
+** Response **
 
 ```
 [
