@@ -37,6 +37,7 @@ func main() {
 	router.HandleFunc("/health", HealthHandler).Methods("GET")
 	router.HandleFunc("/expand", ExpandHandler).Methods("POST")
 	router.HandleFunc("/parser", ParserHandler).Methods("POST")
+	router.HandleFunc("/expandparser", ExpandParserHandler).Methods("POST")
 
 	s := &http.Server{Addr: listenSpec, Handler: router}
 	go func() {
@@ -89,4 +90,32 @@ func ParserHandler(w http.ResponseWriter, r *http.Request) {
 	parsed := parser.ParseAddress(req.Query)
 	parseThing, _ := json.Marshal(parsed)
 	w.Write(parseThing)
+}
+
+func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req Request
+
+	q, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(q, &req)
+
+	inputQuery := req.Query
+	expansionsParsed := []map[string]interface{}{{
+		"type": "query",
+		"data": inputQuery,
+		"parsed": parser.ParseAddress(inputQuery),
+	}}
+	expansions := expand.ExpandAddress(inputQuery)
+	for _, elem := range expansions {
+		expansionsParsed = append(expansionsParsed, map[string]interface{}{
+			"type": "expansion",
+			"data": elem,
+			"parsed": parser.ParseAddress(elem),
+		})
+	}
+	
+	expansionParserThing, _ := json.Marshal(expansionsParsed)
+
+	w.Write(expansionParserThing)
 }
