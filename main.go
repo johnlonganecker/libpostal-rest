@@ -16,7 +16,8 @@ import (
 )
 
 type Request struct {
-	Query string `json:"query"`
+	Query string   `json:"query"`
+	Langs []string `json:"langs"`
 }
 
 func main() {
@@ -73,8 +74,16 @@ func ExpandHandler(w http.ResponseWriter, r *http.Request) {
 	q, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(q, &req)
 
-	expansions := expand.ExpandAddress(req.Query)
+	fmt.Printf("Request: %+v\n", req)
 
+	var expansions []string = nil
+	if req.Langs != nil && len(req.Langs) > 0 {
+		options := expand.GetDefaultExpansionOptions()
+		options.Languages = req.Langs
+		expansions = expand.ExpandAddressOptions(req.Query, options)
+	} else {
+		expansions = expand.ExpandAddress(req.Query)
+	}
 	expansionThing, _ := json.Marshal(expansions)
 	w.Write(expansionThing)
 }
@@ -102,19 +111,19 @@ func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
 
 	inputQuery := req.Query
 	expansionsParsed := []map[string]interface{}{{
-		"type": "query",
-		"data": inputQuery,
+		"type":   "query",
+		"data":   inputQuery,
 		"parsed": parser.ParseAddress(inputQuery),
 	}}
 	expansions := expand.ExpandAddress(inputQuery)
 	for _, elem := range expansions {
 		expansionsParsed = append(expansionsParsed, map[string]interface{}{
-			"type": "expansion",
-			"data": elem,
+			"type":   "expansion",
+			"data":   elem,
 			"parsed": parser.ParseAddress(elem),
 		})
 	}
-	
+
 	expansionParserThing, _ := json.Marshal(expansionsParsed)
 
 	w.Write(expansionParserThing)
