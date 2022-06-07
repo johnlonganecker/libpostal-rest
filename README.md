@@ -93,13 +93,15 @@ curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/parser
 ]
 ```
 
-### Expand
+### Expand without language options
 **Request**
+
 ```
 curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expand
 ```
 
 **Response**
+
 ```
 [
   "100 main saint buffalo new york",
@@ -109,8 +111,27 @@ curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expand
 ]
 ```
 
-### Expand and Parse
+### Expand **with** language options
 **Request**
+
+> Please note the different formatting of the data. We need to enclose it in double quotes and escape the double quotes
+> in the JSON string since the language has to be passed in as a JSON string with single quotes.
+
+```
+curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"'en'\"]}" http://localhost:8080/expand
+```
+
+**Response**
+
+```
+[
+  "100 main st buffalo ny"
+]
+```
+
+### Expand and Parse without language option
+**Request**
+
 ```
 curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expandparser
 ```
@@ -118,7 +139,7 @@ curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expandp
 Original query is parsed and added with `"type": "query"`.
 All query expansions are parsed and added with `"type": "expansion"`
 
-** Response **
+**Response**
 
 ```
 [
@@ -232,5 +253,62 @@ All query expansions are parsed and added with `"type": "expansion"`
         ],
         "type": "expansion"
     }
+]
+```
+
+### Expand and Parse **with** language option
+**Request**
+```
+curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"'en'\"]}" http://localhost:8080/expandparser
+```
+
+**Response**
+
+```
+[
+   {
+      "data":"100 main st buffalo ny",
+      "parsed":[
+         {
+            "label":"house_number",
+            "value":"100"
+         },
+         {
+            "label":"road",
+            "value":"main st"
+         },
+         {
+            "label":"city",
+            "value":"buffalo"
+         },
+         {
+            "label":"state",
+            "value":"ny"
+         }
+      ],
+      "type":"query"
+   },
+   {
+      "data":"100 main st buffalo ny",
+      "parsed":[
+         {
+            "label":"house_number",
+            "value":"100"
+         },
+         {
+            "label":"road",
+            "value":"main st"
+         },
+         {
+            "label":"city",
+            "value":"buffalo"
+         },
+         {
+            "label":"state",
+            "value":"ny"
+         }
+      ],
+      "type":"expansion"
+   }
 ]
 ```
