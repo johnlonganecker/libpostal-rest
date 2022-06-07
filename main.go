@@ -179,7 +179,8 @@ func main() {
 	}()
 
 	stop := make(chan os.Signal)
-	signal.Notify(stop, os.Interrupt)
+	// reacting to Interrupt (CTRL+C) or KILL os signals to gracefully terminate the process)
+	signal.Notify(stop, os.Interrupt, os.Kill)
 
 	<-stop
 	log.Info().Msg("Shut down signal received")
