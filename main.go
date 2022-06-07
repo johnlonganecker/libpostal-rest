@@ -144,8 +144,8 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", HealthHandler).Methods("GET")
 	router.HandleFunc("/expand", ExpandHandler).Methods("POST")
-	router.HandleFunc("/parse", ParserHandler).Methods("POST")
-	router.HandleFunc("/expandparse", ExpandParserHandler).Methods("POST")
+	router.HandleFunc("/parser", ParserHandler).Methods("POST")
+	router.HandleFunc("/expandparser", ExpandParserHandler).Methods("POST")
 
 	var promEndpoint *http.Server
 
@@ -170,12 +170,10 @@ func main() {
 	s := &http.Server{Addr: listenSpec, Handler: router}
 	go func() {
 		if certFile != "" && keyFile != "" {
-			logMsg := fmt.Sprintf("listening on https://%s", listenSpec)
-			log.Info().Msgf(logMsg)
+			log.Info().Msgf("listening on https://%s", listenSpec)
 			s.ListenAndServeTLS(certFile, keyFile)
 		} else {
-			logMsg := fmt.Sprintf("listening on http://%s", listenSpec)
-			log.Info().Msg(logMsg)
+			log.Info().Msgf("listening on http://%s", listenSpec)
 			s.ListenAndServe()
 		}
 	}()
@@ -185,11 +183,13 @@ func main() {
 
 	<-stop
 	log.Info().Msg("Shut down signal received")
-	ctx1, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	ctx2, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx1, cancel1 := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel1()
 
 	s.Shutdown(ctx1)
 	if promEnabled {
+		defer cancel2()
 		promEndpoint.Shutdown(ctx2)
 	}
 	log.Info().Msg("Server stopped")
@@ -224,7 +224,7 @@ func ExpandHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ParserHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Handling '/parse' request")
+	log.Debug().Msg("Handling '/parser' request")
 	defer endTrace(startTrace(parseLatencyHist))
 	w.Header().Set("Content-Type", "application/json")
 
@@ -240,7 +240,7 @@ func ParserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Handling '/expandparse' request")
+	log.Debug().Msg("Handling '/expandparser' request")
 	defer endTrace(startTrace(expandParseLatencyHist))
 	w.Header().Set("Content-Type", "application/json")
 
