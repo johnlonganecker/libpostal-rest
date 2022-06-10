@@ -114,7 +114,7 @@ curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expand
 ### Expand **with** language options
 **Request**
 
-> **IMPORTANT NOTE:** if the `langs` array contains an invalid language specifier, e.g. `"xyz"`, the string will **not** be expanded for that specified and instead the original query string will be returned.
+> **IMPORTANT NOTE:** if the `langs` array contains an invalid language specifier, e.g. `"xyz"`, the string will **not** be expanded for that specified language input and instead the original query string will be returned.
 
 ```
 curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"de\"]}" http://localhost:8080/expand
