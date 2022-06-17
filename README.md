@@ -117,7 +117,7 @@ curl -X POST -d '{"query": "100 main st buffalo ny"}' http://<host>:8080/expand
 > **IMPORTANT NOTE:** if the `langs` array contains an invalid language specifier, e.g. `"xyz"`, the string will **not** be expanded for that specified language input and instead the original query string will be returned.
 
 ```
-curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"de\"]}" http://localhost:8080/expand
+curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"de\"]}" http://<host>:8080/expand
 ```
 
 **Response**
@@ -132,7 +132,7 @@ Incorrect language specified
 
 **Request**
 ```
-curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"de\", \"xyz\"]}" http://localhost:8080/expand
+curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"de\", \"xyz\"]}" http://<host>:8080/expand
 ```
 
 **Response**
@@ -274,7 +274,7 @@ All query expansions are parsed and added with `"type": "expansion"`
 ### Expand and Parse **with** language option
 **Request**
 ```
-curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"fr\"]}" http://localhost:8080/expandparser
+curl -X POST -d "{\"query\": \"100 main st buffalo ny\", \"langs\": [\"fr\"]}" http://<host>:8080/expandparser
 ```
 
 **Response**
