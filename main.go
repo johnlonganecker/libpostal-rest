@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -161,7 +162,9 @@ func main() {
 
 		go func() {
 			log.Info().Msgf("metrics endpoint listening on http://%s", promListener)
-			promEndpoint.ListenAndServe()
+			if err := promEndpoint.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Error().Err(err).Msg("Prometheus endpoint error")
+			}
 		}()
 	}
 
@@ -169,18 +172,22 @@ func main() {
 
 	s := &http.Server{Addr: listenSpec, Handler: router}
 	go func() {
+		var err error
 		if certFile != "" && keyFile != "" {
 			log.Info().Msgf("listening on https://%s", listenSpec)
-			s.ListenAndServeTLS(certFile, keyFile)
+			err = s.ListenAndServeTLS(certFile, keyFile)
 		} else {
 			log.Info().Msgf("listening on http://%s", listenSpec)
-			s.ListenAndServe()
+			err = s.ListenAndServe()
+		}
+		if err != nil && err != http.ErrServerClosed {
+			log.Error().Err(err).Msg("Server error")
 		}
 	}()
 
-	stop := make(chan os.Signal)
-	// reacting to Interrupt (CTRL+C) or KILL os signals to gracefully terminate the process)
-	signal.Notify(stop, os.Interrupt, os.Kill)
+	stop := make(chan os.Signal, 1)
+	// reacting to Interrupt (CTRL+C) or TERM signals to gracefully terminate the process
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	<-stop
 	log.Info().Msg("Shut down signal received")
@@ -188,10 +195,14 @@ func main() {
 	ctx2, cancel2 := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel1()
 
-	s.Shutdown(ctx1)
+	if err := s.Shutdown(ctx1); err != nil {
+		log.Error().Err(err).Msg("Error shutting down main server")
+	}
 	if promEnabled {
 		defer cancel2()
-		promEndpoint.Shutdown(ctx2)
+		if err := promEndpoint.Shutdown(ctx2); err != nil {
+			log.Error().Err(err).Msg("Error shutting down Prometheus endpoint")
+		}
 	}
 	log.Info().Msg("Server stopped")
 }
@@ -208,19 +219,34 @@ func ExpandHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req Request
 
-	q, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(q, &req)
+	q, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read request body")
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	if err := json.Unmarshal(q, &req); err != nil {
+		log.Error().Err(err).Msg("Failed to unmarshal request")
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
 
 	var expansions []string = nil
-	if req.Langs != nil && len(req.Langs) > 0 {
+	if len(req.Langs) > 0 {
 		options := expand.GetDefaultExpansionOptions()
 		options.Languages = req.Langs
 		expansions = expand.ExpandAddressOptions(req.Query, options)
 	} else {
 		expansions = expand.ExpandAddress(req.Query)
 	}
+	expansionThing, err := json.Marshal(expansions)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal expansions")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	counterInc(expandRequestCtr)
-	expansionThing, _ := json.Marshal(expansions)
+	w.WriteHeader(http.StatusOK)
 	w.Write(expansionThing)
 }
 
@@ -231,12 +257,27 @@ func ParserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req Request
 
-	q, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(q, &req)
+	q, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read request body")
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	if err := json.Unmarshal(q, &req); err != nil {
+		log.Error().Err(err).Msg("Failed to unmarshal request")
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
 
 	parsed := parser.ParseAddress(req.Query)
-	parseThing, _ := json.Marshal(parsed)
+	parseThing, err := json.Marshal(parsed)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal parsed address")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	counterInc(parseRequestCtr)
+	w.WriteHeader(http.StatusOK)
 	w.Write(parseThing)
 }
 
@@ -247,8 +288,17 @@ func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req Request
 
-	q, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(q, &req)
+	q, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read request body")
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	if err := json.Unmarshal(q, &req); err != nil {
+		log.Error().Err(err).Msg("Failed to unmarshal request")
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
 
 	inputQuery := req.Query
 	expansionsParsed := []map[string]interface{}{{
@@ -258,7 +308,7 @@ func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
 	}}
 
 	var expansions []string = nil
-	if req.Langs != nil && len(req.Langs) > 0 {
+	if len(req.Langs) > 0 {
 		options := expand.GetDefaultExpansionOptions()
 		options.Languages = req.Langs
 		expansions = expand.ExpandAddressOptions(req.Query, options)
@@ -274,7 +324,13 @@ func ExpandParserHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	expansionParserThing, _ := json.Marshal(expansionsParsed)
+	expansionParserThing, err := json.Marshal(expansionsParsed)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal expansion parser result")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	counterInc(expandParseRequestCtr)
+	w.WriteHeader(http.StatusOK)
 	w.Write(expansionParserThing)
 }

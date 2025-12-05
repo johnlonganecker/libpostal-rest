@@ -2,7 +2,7 @@
 
 ## Build
 
-Go 1.13+. Build steps for older go versions may vary.
+Go 1.23+ required.
 
 ```
 go build .
